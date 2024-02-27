@@ -69,5 +69,15 @@ function handleSearch() {
                         pokemon.name.toLowerCase().startsWith(searchTerm);
                 });
                 
+        } else {
+                filteredPokemons = allPokemons;
         }
+
+        displayPokemons(filteredPokemons);
+
+        if (filteredPokemons.length === 0) {
+                notFoundMessage.computedStyleMap.display = "block";
+        } else {
+                notFoundMessage.computedStyleMap.display = "none";
+         }
 }
