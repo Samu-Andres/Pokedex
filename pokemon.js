@@ -1,4 +1,4 @@
-const MAX_POKEMON = 1000;
+const MAX_POKEMON = 650;
 const listWrapper = document.querySelector(".list-wrapper");
 const searchInput = document.querySelector("#search-input");
 const numberFilter = document.querySelector("#number");
@@ -10,7 +10,8 @@ let allPokemons = [];
 fetch(`https://pokeapi.co/api/v2/pokemon?limit=${MAX_POKEMON}`)
         .then((response) => response.json())
         .then((data) => {
-        allPokemons = data.results;
+                allPokemons = data.results;
+                displayPokemons(allPokemons);
         }
 );
 async function fetchPokemonDataBeforeRedirect(id) {
@@ -48,5 +49,25 @@ function displayPokemons(pokemon) {
                                 window.location.href = `./detail.html?id=${pokemonID}`;
                         }
                 });
+                listWrapper.appendChild(listItem);
         });
+}
+
+searchInput.addEventListener("keyup", handleSearch);
+
+function handleSearch() {
+        const searchTerm = searchInput.value.toLowerCase();
+        let filteredPokemons;
+
+        if(numberFilter.checked) {
+                filteredPokemons = allPokemons.filter((pokemon) => {
+                        const pokemonID = pokemon.url.split("/")[6];
+                        return pokemonID.startsWith(searchTerm);
+                });
+        } else if(nameFilter.checked) {
+                filteredPokemons = allPokemons.filter((pokemon) => {
+                        pokemon.name.toLowerCase().startsWith(searchTerm);
+                });
+                
+        }
 }
