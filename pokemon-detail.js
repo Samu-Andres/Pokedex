@@ -30,30 +30,35 @@ async function loadPokemon(id) {
     abilitiesWrapper.innerHTML = "";
 
     if (currentPokemonId === id) {
-      displayPokemonDetails(pokemon);
-      const flavorText = getEnglishFlavorText(pokemonSpecies);
-      document.querySelector(".body3-fonts.pokemon-description").textContent =
-        flavorText;
+    displayPokemonDetails(pokemon);
+    const flavorText = getEnglishFlavorText(pokemonSpecies);
+    document.querySelector(".body3-fonts.pokemon-description").textContent =
+      flavorText;
 
-      const [leftArrow, rightArrow] = ["#leftArrow", "#rightArrow"].map((sel) =>
-        document.querySelector(sel)
-      );
-      leftArrow.removeEventListener("click", navigatePokemon);
-      rightArrow.removeEventListener("click", navigatePokemon);
+    const [leftArrow, rightArrow] = ["#leftArrow", "#rightArrow"].map((sel) =>
+      document.querySelector(sel)
+    );
 
-      if (id !== 1) {
-        leftArrow.addEventListener("click", () => {
-          navigatePokemon(id - 1);
-        });
-      }
-      if (id !== 151) {
-        rightArrow.addEventListener("click", () => {
-          navigatePokemon(id + 1);
-        });
-      }
-
-      window.history.pushState({}, "", `./detail.html?id=${id}`);
+    if (leftArrow !== null) {
+        leftArrow.removeEventListener("click", navigatePokemon);
+        if (id !== 1) {
+            leftArrow.addEventListener("click", () => {
+                navigatePokemon(id - 1);
+            });
+        }
     }
+
+    if (rightArrow !== null) {
+    rightArrow.removeEventListener("click", navigatePokemon);
+    if (id !== '650') {
+        rightArrow.addEventListener("click", () => {
+            navigatePokemon(Number(id) + 1);
+        });
+    }
+}
+
+    window.history.pushState({}, "", `./detail.html?id=${id}`);
+}
 
     return true;
   } catch (error) {
