@@ -80,3 +80,12 @@ function handleSearch() {
         notFoundMessage.computedStyleMap.display = "none";
     }
 }
+
+const closeButton = document.querySelector("#search-close-icon");
+closeButton.addEventListener("click", clearShearch);
+
+function clearShearch() {
+    searchInput.value = "";
+        displayPokemons(allPokemons);
+        notFoundMessage.computedStyleMap.display = "none";
+}
