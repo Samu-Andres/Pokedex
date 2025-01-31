@@ -13,16 +13,23 @@ fetch(`https://pokeapi.co/api/v2/pokemon?limit=${MAX_POKEMON}`)
                 allPokemons = data.results;
                 displayPokemons(allPokemons);
         }
-);
+        );
 async function fetchPokemonDataBeforeRedirect(id) {
         try {
                 const [pokemon, pokemonSpecies] = await Promise.all([
-                        fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then((res) => res.json()),
-                        fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`).then((res) => res.json()),
+                        fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then((res) => {
+                                if (!res.ok) throw new Error('Pokemon no encontrado');
+                                return res.json()
+                        }),
+                        fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`).then((res) => {
+                                if (!res.ok) throw new Error('Especies de Pokemon no encontradas');
+                                return res.json()
+                        }),
                 ]);
                 return true;
-        }catch (error) {
-                console.error("Failed to fetch pokemon data before redirect");
+        } catch (error) {
+                console.error("Error al obtener datos del pokemon:", error.message);
+                return false;
         }
 }
 function displayPokemons(pokemon) {
@@ -36,7 +43,7 @@ function displayPokemons(pokemon) {
                         <p class="caption-fonts">${pokemonID}</p>
                 </div>
                 <div class="img-wrap"> 
-                        <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${pokemon.name}" />
+                        <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${pokemon.name}" onerror="this.src='ruta-a-imagen-por-defecto.png'" />
                 </div>
                 <div class="name-wrap"> 
                         <p class="body3-fonts">${pokemon.name}</p>
@@ -56,36 +63,36 @@ function displayPokemons(pokemon) {
 searchInput.addEventListener("keyup", handleSearch);
 
 function handleSearch() {
-    const searchTerm = searchInput.value.toLowerCase();
-    let filteredPokemons;
+        const searchTerm = searchInput.value.toLowerCase();
+        let filteredPokemons;
 
-    if(numberFilter.checked) {
-        filteredPokemons = allPokemons.filter((pokemon) => {
-            const pokemonID = pokemon.url.split("/")[6];
-            return pokemonID.startsWith(searchTerm);
-        });
-    } else if(nameFilter.checked) {
-        filteredPokemons = allPokemons.filter((pokemon) => {
-            return pokemon.name.toLowerCase().startsWith(searchTerm);
-        });
-    } else {
-        filteredPokemons = allPokemons;
-    }
+        if (numberFilter.checked) {
+                filteredPokemons = allPokemons.filter((pokemon) => {
+                        const pokemonID = pokemon.url.split("/")[6];
+                        return pokemonID.startsWith(searchTerm);
+                });
+        } else if (nameFilter.checked) {
+                filteredPokemons = allPokemons.filter((pokemon) => {
+                        return pokemon.name.toLowerCase().startsWith(searchTerm);
+                });
+        } else {
+                filteredPokemons = allPokemons;
+        }
 
-    displayPokemons(filteredPokemons);
+        displayPokemons(filteredPokemons);
 
-    if (filteredPokemons.length === 0) {
-        notFoundMessage.computedStyleMap.display = "block";
-    } else {
-        notFoundMessage.computedStyleMap.display = "none";
-    }
+        if (filteredPokemons.length === 0) {
+                notFoundMessage.style.display = "block";
+        } else {
+                notFoundMessage.style.display = "none";
+        }
 }
 
 const closeButton = document.querySelector("#search-close-icon");
-closeButton.addEventListener("click", clearShearch);
+closeButton.addEventListener("click", clearSearch);
 
-function clearShearch() {
-    searchInput.value = "";
+function clearSearch() {
+        searchInput.value = "";
         displayPokemons(allPokemons);
-        notFoundMessage.computedStyleMap.display = "none";
+        notFoundMessage.style.display = "none";
 }
