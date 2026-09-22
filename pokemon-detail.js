@@ -1,11 +1,33 @@
 let currentPokemonId = null;
 
+// Total real de especies, consultado una sola vez y cacheado. Si la consulta
+// falla, se usa un valor de referencia aproximado en vez de trabar la navegación.
+let maxPokemonIdPromise = null;
+function getMaxPokemonId() {
+  if (!maxPokemonIdPromise) {
+    maxPokemonIdPromise = fetch("https://pokeapi.co/api/v2/pokemon-species/?limit=1")
+      .then((res) => {
+        if (!res.ok) throw new Error("No se pudo obtener el total de Pokémon");
+        return res.json();
+      })
+      .then((data) => data.count)
+      .catch((error) => {
+        console.warn(
+          "No se pudo obtener el total real de Pokémon, uso un valor de referencia:",
+          error.message
+        );
+        return 1025;
+      });
+  }
+  return maxPokemonIdPromise;
+}
+getMaxPokemonId(); // dispara la petición apenas carga la página, en paralelo
+
 document.addEventListener("DOMContentLoaded", () => {
-  const MAX_POKEMONS = 151;
   const pokemonID = new URLSearchParams(window.location.search).get("id");
   const id = parseInt(pokemonID, 10);
 
-  if (id < 1 || id > MAX_POKEMONS) {
+  if (!Number.isInteger(id) || id < 1) {
     return (window.location.href = "./index.html");
   }
 
@@ -13,15 +35,27 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPokemon(id);
 });
 
+function setDetailLoading(loading) {
+  const indicator = document.querySelector("#detail-loading");
+  if (!indicator) return;
+  indicator.style.display = loading ? "flex" : "none";
+}
+
 async function loadPokemon(id) {
+  setDetailLoading(true);
   try {
+    const [pokemonRes, speciesRes] = await Promise.all([
+      fetch(`https://pokeapi.co/api/v2/pokemon/${id}`),
+      fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`),
+    ]);
+
+    if (!pokemonRes.ok || !speciesRes.ok) {
+      throw new Error(`Pokémon #${id} no encontrado`);
+    }
+
     const [pokemon, pokemonSpecies] = await Promise.all([
-      fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then((res) =>
-        res.json()
-      ),
-      fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`).then((res) =>
-        res.json()
-      ),
+      pokemonRes.json(),
+      speciesRes.json(),
     ]);
 
     const abilitiesWrapper = document.querySelector(
@@ -35,35 +69,50 @@ async function loadPokemon(id) {
     document.querySelector(".body3-fonts.pokemon-description").textContent =
       flavorText;
 
-    const [leftArrow, rightArrow] = ["#leftArrow", "#rightArrow"].map((sel) =>
+    const maxId = await getMaxPokemonId();
+
+    // Se clonan los nodos de las flechas para garantizar que no queden
+    // listeners de navegaciones anteriores pegados (el removeEventListener
+    // original apuntaba a una función que nunca se había agregado, así que
+    // los clicks se iban acumulando).
+    let [leftArrow, rightArrow] = ["#leftArrow", "#rightArrow"].map((sel) =>
       document.querySelector(sel)
     );
-
     if (leftArrow !== null) {
-        leftArrow.removeEventListener("click", navigatePokemon);
-        if (id !== 1) {
-            leftArrow.addEventListener("click", () => {
-                navigatePokemon(id - 1);
-            });
-        }
+      leftArrow = leftArrow.cloneNode(true);
+      document.querySelector("#leftArrow").replaceWith(leftArrow);
+    }
+    if (rightArrow !== null) {
+      rightArrow = rightArrow.cloneNode(true);
+      document.querySelector("#rightArrow").replaceWith(rightArrow);
     }
 
-    if (rightArrow !== null) {
-    rightArrow.removeEventListener("click", navigatePokemon);
-    if (id !== '650') {
-        rightArrow.addEventListener("click", () => {
-            navigatePokemon(Number(id) + 1);
+    if (leftArrow !== null && id !== 1) {
+        leftArrow.addEventListener("click", () => {
+            navigatePokemon(id - 1);
         });
     }
-}
+
+    if (rightArrow !== null && id !== maxId) {
+        rightArrow.addEventListener("click", () => {
+            navigatePokemon(id + 1);
+        });
+    }
 
     window.history.pushState({}, "", `./detail.html?id=${id}`);
 }
 
     return true;
   } catch (error) {
-    console.error("An error occured while fetching Pokemon data:", error);
+    console.error("Error al cargar los datos del Pokémon:", error.message);
+    if (currentPokemonId === id) {
+      window.location.href = "./index.html";
+    }
     return false;
+  } finally {
+    if (currentPokemonId === id) {
+      setDetailLoading(false);
+    }
   }
 }
 

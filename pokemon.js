@@ -1,19 +1,57 @@
-const MAX_POKEMON = 150;
+const PAGE_SIZE = 20;
 const listWrapper = document.querySelector(".list-wrapper");
 const searchInput = document.querySelector("#search-input");
 const numberFilter = document.querySelector("#number");
 const nameFilter = document.querySelector("#name");
 const notFoundMessage = document.querySelector("#not-found-message");
+const loadMoreButton = document.querySelector("#load-more-button");
+const loadingIndicator = document.querySelector("#loading-indicator");
 
 let allPokemons = [];
+let nextPageUrl = `https://pokeapi.co/api/v2/pokemon?limit=${PAGE_SIZE}`;
+let isLoading = false;
 
-fetch(`https://pokeapi.co/api/v2/pokemon?limit=${MAX_POKEMON}`)
-        .then((response) => response.json())
-        .then((data) => {
-                allPokemons = data.results;
+loadNextPage();
+
+async function loadNextPage() {
+        if (!nextPageUrl || isLoading) return;
+
+        isLoading = true;
+        setLoading(true);
+
+        try {
+                const response = await fetch(nextPageUrl);
+                if (!response.ok) throw new Error("No se pudo cargar la lista de Pokémon");
+                const data = await response.json();
+
+                allPokemons = allPokemons.concat(data.results);
+                nextPageUrl = data.next;
+
                 displayPokemons(allPokemons);
+                updateLoadMoreButton();
+        } catch (error) {
+                console.error("Error al cargar la lista de Pokémon:", error.message);
+        } finally {
+                isLoading = false;
+                setLoading(false);
         }
-        );
+}
+
+function setLoading(loading) {
+        if (!loadingIndicator) return;
+        loadingIndicator.style.display = loading ? "flex" : "none";
+}
+
+function updateLoadMoreButton() {
+        if (!loadMoreButton) return;
+        const searchActive = searchInput.value.trim() !== "";
+        loadMoreButton.style.display = !searchActive && nextPageUrl ? "inline-block" : "none";
+}
+
+if (loadMoreButton) {
+        loadMoreButton.addEventListener("click", loadNextPage);
+}
+
 async function fetchPokemonDataBeforeRedirect(id) {
         try {
                 const [pokemon, pokemonSpecies] = await Promise.all([
@@ -32,6 +70,7 @@ async function fetchPokemonDataBeforeRedirect(id) {
                 return false;
         }
 }
+
 function displayPokemons(pokemon) {
         listWrapper.innerHTML = "";
         pokemon.forEach((pokemon) => {
@@ -43,7 +82,7 @@ function displayPokemons(pokemon) {
                         <p class="caption-fonts">${pokemonID}</p>
                 </div>
                 <div class="img-wrap"> 
-                        <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${pokemon.name}" onerror="this.src='./assets/pokeball.svg'" />
+                        <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${pokemon.name}" loading="lazy" onerror="this.src='./assets/pokeball.svg'" />
                 </div>
                 <div class="name-wrap"> 
                         <p class="body3-fonts">${pokemon.name}</p>
@@ -86,6 +125,8 @@ function handleSearch() {
         } else {
                 notFoundMessage.style.display = "none";
         }
+
+        updateLoadMoreButton();
 }
 
 const closeButton = document.querySelector("#search-close-icon");
@@ -95,4 +136,5 @@ function clearSearch() {
         searchInput.value = "";
         displayPokemons(allPokemons);
         notFoundMessage.style.display = "none";
+        updateLoadMoreButton();
 }

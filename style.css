@@ -547,3 +547,81 @@ div#not-found-message {
   border-color: transparent;
   background-color: transparent;
 }
+/* --- Loading, paginación y pulido de interacción --- */
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid var(--grayscale-light);
+  border-top-color: var(--identity-primary);
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-indicator {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 1rem 0;
+  color: var(--grayscale-medium);
+}
+
+#detail-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+}
+
+.load-more-button {
+  display: none;
+  margin: 0 auto 1rem auto;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 16px;
+  background-color: var(--identity-primary);
+  color: var(--grayscale-white);
+  font-family: inherit;
+  font-size: var(--body2-font-size);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  box-shadow: var(--drop-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.load-more-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--drop-shadow-hover);
+}
+
+.load-more-button:active {
+  transform: translateY(0);
+  opacity: 0.9;
+}
+
+.list-item {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.list-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--drop-shadow-hover);
+}
+
+.arrow {
+  transition: opacity 0.15s ease;
+}
+
+.arrow:hover {
+  opacity: 0.75;
+}
