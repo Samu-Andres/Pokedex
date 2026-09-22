@@ -43,7 +43,7 @@ function displayPokemons(pokemon) {
                         <p class="caption-fonts">${pokemonID}</p>
                 </div>
                 <div class="img-wrap"> 
-                        <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${pokemon.name}" onerror="this.src='ruta-a-imagen-por-defecto.png'" />
+                        <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${pokemon.name}" onerror="this.src='./assets/pokeball.svg'" />
                 </div>
                 <div class="name-wrap"> 
                         <p class="body3-fonts">${pokemon.name}</p>
